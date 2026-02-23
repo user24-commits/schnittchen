@@ -1,0 +1,287 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schnittchen | Der Planer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=JetBrains+Mono:wght@500&display=swap');
+        
+        body { background-color: #f1f5f9; font-family: 'Inter', sans-serif; color: #1e293b; }
+        
+        /* Inputs mit Auto-Select Optik */
+        input, select { 
+            font-family: 'JetBrains Mono', monospace;
+            text-align: center; width: 100%; padding: 0.7rem; border: 1px solid #cbd5e1; 
+            border-radius: 0.6rem; background: #ffffff; outline: none; transition: all 0.2s;
+            appearance: none; -moz-appearance: textfield;
+        }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input:focus, select:focus { border-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1); }
+        
+        /* Inaktive Felder Optik */
+        .output-field { 
+            background-color: #f1f5f9 !important; 
+            color: #64748b !important; 
+            border-color: #e2e8f0 !important;
+            cursor: default;
+        }
+
+        label { display: block; font-size: 0.7rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem; text-align: center; }
+
+        .btn-unit { background: #e2e8f0; color: #64748b; font-weight: 700; font-size: 0.7rem; padding: 0.5rem; transition: all 0.2s; flex: 1; }
+        .btn-unit.active { background: #f59e0b; color: white; }
+        
+        .card { background: white; border-radius: 1.2rem; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        #cut-list-display div { border-left: 4px solid #cbd5e1; text-align: left; background: #f8fafc; color: #64748b; }
+    </style>
+</head>
+<body class="pb-20">
+
+    <header class="py-8 text-center flex flex-col items-center">
+        <img src="uploaded file ChatGPT Image 18. Feb. 2026, 17_14_05.jpg" alt="Schnittchen" class="max-w-[280px] mb-4">
+        <div class="flex gap-2">
+            <button onclick="setLang('de')" id="l-de" class="text-[10px] font-bold px-3 py-1 bg-amber-500 text-white rounded uppercase">DE</button>
+            <button onclick="setLang('en')" id="l-en" class="text-[10px] font-bold px-3 py-1 bg-slate-200 text-slate-600 rounded uppercase">EN</button>
+        </div>
+    </header>
+
+    <div class="max-w-6xl mx-auto px-4">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            <div class="lg:col-span-4 space-y-5 card p-6 flex flex-col items-center">
+                <div class="w-full">
+                    <label id="lbl-unit">Einheit & Maßbasis</label>
+                    <div class="flex bg-slate-100 rounded-lg overflow-hidden p-1 gap-1 mb-2">
+                        <button onclick="setUnit('mm')" id="u-mm" class="btn-unit rounded-md active">MM</button>
+                        <button onclick="setUnit('cm')" id="u-cm" class="btn-unit rounded-md">CM</button>
+                    </div>
+                    <select id="type" onchange="calculate()" class="text-center">
+                        <option value="outside" id="opt-outside">Außenmaß (Standard)</option>
+                        <option value="inside" id="opt-inside">Innenmaß (Lichtes Maß)</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 w-full">
+                    <div><label id="lbl-qty">Menge</label><input type="number" id="qty" value="1" oninput="calculate()" onfocus="this.select()"></div>
+                    <div><label id="lbl-thick">Wandstärke</label><input type="number" id="thickness" value="18" oninput="calculate()" onfocus="this.select()"></div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2 py-4 border-y border-slate-100 w-full">
+                    <div><label id="lbl-len">Länge</label><input type="number" id="length" value="400" oninput="calculate()" onfocus="this.select()"></div>
+                    <div><label id="lbl-width">Breite</label><input type="number" id="width" value="300" oninput="calculate()" onfocus="this.select()"></div>
+                    <div><label id="lbl-height">Höhe</label><input type="number" id="height" value="150" oninput="calculate()" onfocus="this.select()"></div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 w-full">
+                    <div class="flex flex-col items-center w-full">
+                        <label id="lbl-btype">Boden</label>
+                        <select id="bottom-type" onchange="calculate()" class="text-center">
+                            <option value="inside" id="opt-binside">Boden Innen</option>
+                            <option value="bottom" id="opt-bbottom">Boden Außen</option>
+                        </select>
+                    </div>
+                    <div><label id="lbl-bthick">Stärke</label><input type="number" id="bottom-thick" value="18" oninput="calculate()" onfocus="this.select()"></div>
+                </div>
+
+                <div class="w-full">
+                    <label id="lbl-wood">Material</label>
+                    <input type="text" id="wood-type" value="Multiplex Birke" oninput="calculate()" onfocus="this.select()">
+                </div>
+            </div>
+
+            <div class="lg:col-span-8 space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-slate-900 rounded-2xl overflow-hidden h-[380px] shadow-xl relative border-b-8 border-amber-500">
+                        <div id="canvas-container" class="w-full h-full"></div>
+                    </div>
+
+                    <div class="card p-6 flex flex-col justify-between">
+                        <div>
+                            <h2 class="font-bold uppercase text-slate-400 text-[10px] tracking-widest mb-4" id="lbl-list">Stückliste (Inaktiv)</h2>
+                            <div id="cut-list-display" class="space-y-2 font-mono text-[12px]"></div>
+                        </div>
+                        
+                        <div class="mt-6 pt-4 border-t space-y-2">
+                            <button onclick="copyListOnly()" class="w-full bg-slate-800 hover:bg-black text-white px-4 py-3 rounded-lg text-[10px] font-bold transition uppercase tracking-widest">Kopieren</button>
+                            <button onclick="copyEmail()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-400 px-4 py-3 rounded-lg text-[10px] font-bold transition uppercase tracking-widest border border-slate-200">Mail (TXT)</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card p-6 flex justify-between items-center bg-slate-50 border-dashed border-2 border-slate-200">
+                    <div class="text-center flex-1">
+                        <p class="text-[10px] font-black text-slate-400 uppercase" id="lbl-area">Gesamtfläche</p>
+                        <p id="val-area" class="text-xl font-mono font-bold text-slate-400">0.00 m²</p>
+                    </div>
+                    <div class="h-10 w-px bg-slate-200 mx-4"></div>
+                    <div class="text-center flex-1">
+                        <p class="text-[10px] font-black text-slate-400 uppercase" id="lbl-price-label">Preis / m²</p>
+                        <input type="number" id="price-sqm" value="45" oninput="calculate()" onfocus="this.select()" class="w-20 mx-auto text-sm border-none bg-transparent font-bold text-slate-400">
+                    </div>
+                    <div class="h-10 w-px bg-slate-200 mx-4"></div>
+                    <div class="text-center flex-1">
+                        <p class="text-[10px] font-black text-slate-400 uppercase">Gesamtpreis</p>
+                        <span id="val-price" class="text-xl font-bold text-slate-400">0.00 €</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let scene, camera, renderer, controls, parts = [];
+        let unit = 'mm';
+        let lang = 'de';
+
+        const dict = {
+            de: {
+                unit: "Einheit & Maßbasis", outside: "Außenmaß (Standard)", inside: "Innenmaß (Lichtes Maß)",
+                qty: "Menge", thick: "Wandstärke", len: "Länge", width: "Breite", height: "Höhe",
+                btype: "Boden", binside: "Boden Innen", bbottom: "Boden Außen", bthick: "Stärke",
+                wood: "Material", list: "Stückliste (Berechnet)", area: "Gesamtfläche", "price-label": "Preis / m²"
+            },
+            en: {
+                unit: "Unit & Basis", outside: "Outside Dims", inside: "Inside Dims",
+                qty: "Quantity", thick: "Wall Thick", len: "Length", width: "Width", height: "Height",
+                btype: "Bottom", binside: "Inside Bottom", bbottom: "Outside Bottom", bthick: "Thick",
+                wood: "Material", list: "Cutting List (Calc)", area: "Total Area", "price-label": "Price / sqm"
+            }
+        };
+
+        function setLang(l) {
+            lang = l;
+            document.getElementById('l-de').className = l === 'de' ? 'text-[10px] font-bold px-3 py-1 bg-amber-500 text-white rounded' : 'text-[10px] font-bold px-3 py-1 bg-slate-200 text-slate-600 rounded';
+            document.getElementById('l-en').className = l === 'en' ? 'text-[10px] font-bold px-3 py-1 bg-amber-500 text-white rounded' : 'text-[10px] font-bold px-3 py-1 bg-slate-200 text-slate-600 rounded';
+            const d = dict[lang];
+            Object.keys(d).forEach(key => {
+                const el = document.getElementById('lbl-' + key) || document.getElementById('opt-' + key);
+                if(el) el.innerText = d[key];
+            });
+            calculate();
+        }
+
+        function init3D() {
+            const container = document.getElementById('canvas-container');
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 1, 10000);
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            container.appendChild(renderer.domElement);
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            scene.add(new THREE.AmbientLight(0xffffff, 0.9));
+            const sun = new THREE.DirectionalLight(0xffffff, 0.3);
+            sun.position.set(200, 300, 100);
+            scene.add(sun);
+            calculate();
+            animate();
+        }
+
+        function setUnit(u) {
+            unit = u;
+            document.querySelectorAll('.btn-unit').forEach(b => b.classList.remove('active'));
+            document.getElementById('u-'+u).classList.add('active');
+            calculate();
+        }
+
+        function calculate() {
+            const L = parseFloat(document.getElementById('length').value) || 0;
+            const W = parseFloat(document.getElementById('width').value) || 0;
+            const H = parseFloat(document.getElementById('height').value) || 0;
+            const T = parseFloat(document.getElementById('thickness').value) || 0;
+            const BT = parseFloat(document.getElementById('bottom-thick').value) || 0;
+            const Q = parseInt(document.getElementById('qty').value) || 1;
+            const bType = document.getElementById('bottom-type').value;
+            const mode = document.getElementById('type').value;
+
+            let fL, sL, bL, bW, wallH;
+
+            if (mode === 'outside') {
+                fL = L;
+                sL = W - (2 * T);
+                wallH = (bType === 'bottom') ? H - BT : H;
+                bL = (bType === 'inside') ? L - (2 * T) : L;
+                bW = (bType === 'inside') ? W - (2 * T) : W;
+                if(bType === 'bottom') { bL = L; bW = W; }
+            } else {
+                fL = L + (2 * T);
+                sL = W;
+                wallH = H;
+                bL = L;
+                bW = W;
+            }
+
+            document.getElementById('cut-list-display').innerHTML = `
+                <div class="p-2 border-l-4 border-slate-300"><b>${2*Q}x Front/Rück</b><br>${fL} x ${wallH} ${unit}</div>
+                <div class="p-2 border-l-4 border-slate-300"><b>${2*Q}x Seiten</b><br>${sL} x ${wallH} ${unit}</div>
+                <div class="p-2 border-l-4 border-slate-300"><b>${1*Q}x Boden</b><br>${bL} x ${bW} ${unit}</div>
+            `;
+
+            update3D(fL, sL, bL, bW, wallH, T, BT, bType);
+            
+            let div = (unit === 'mm') ? 1000000 : 10000;
+            let area = ((2*fL*wallH) + (2*sL*wallH) + (bL*bW)) * Q / div;
+            document.getElementById('val-area').innerText = area.toFixed(2) + " m²";
+            document.getElementById('val-price').innerText = (area * parseFloat(document.getElementById('price-sqm').value)).toFixed(2) + " €";
+        }
+
+        function update3D(fL, sL, bL, bW, wallH, T, BT, bType) {
+            parts.forEach(p => scene.remove(p));
+            parts = [];
+            const mat = new THREE.MeshLambertMaterial({ color: 0xe2e8f0 });
+            const edgeMat = new THREE.LineBasicMaterial({ color: 0x94a3b8 });
+
+            const box = (w, h, d, x, y, z) => {
+                if(w <= 0 || h <= 0 || d <= 0) return;
+                const geo = new THREE.BoxGeometry(w, h, d);
+                const mesh = new THREE.Mesh(geo, mat);
+                mesh.position.set(x, y, z);
+                mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeMat));
+                scene.add(mesh);
+                parts.push(mesh);
+            };
+
+            // Boden
+            box(bL, BT, bW, 0, BT/2, 0);
+
+            // Wände: Bei 'bottom' sitzen sie oben drauf (Y-Offset = BT)
+            const yW = (bType === 'bottom') ? BT + wallH/2 : wallH/2;
+            
+            // Front & Back
+            box(fL, wallH, T, 0, yW, (bW/2 - T/2)); 
+            box(fL, wallH, T, 0, yW, -(bW/2 - T/2)); 
+            
+            // Sides
+            box(T, wallH, sL, (fL/2 - T/2), yW, 0); 
+            box(T, wallH, sL, -(fL/2 - T/2), yW, 0); 
+
+            const max = Math.max(fL, bW, wallH);
+            camera.position.set(max*1.8, max*1.8, max*1.8);
+            controls.target.set(0, wallH/2, 0);
+            controls.update();
+        }
+
+        function animate() { requestAnimationFrame(animate); renderer.render(scene, camera); }
+
+        function copyListOnly() {
+            const list = document.getElementById('cut-list-display').innerText;
+            navigator.clipboard.writeText(list).then(() => alert("Kopiert!"));
+        }
+
+        function copyEmail() {
+            const wood = document.getElementById('wood-type').value;
+            const list = document.getElementById('cut-list-display').innerText.replace(/\n/g, " | ");
+            const body = `Zuschnitt-Anfrage: ${wood}\nListe: ${list}`;
+            navigator.clipboard.writeText(body).then(() => alert("Mail-Text kopiert!"));
+        }
+
+        window.onload = () => { init3D(); setLang('de'); };
+    </script>
+</body>
+</html>
+ 
