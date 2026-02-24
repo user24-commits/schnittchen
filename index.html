@@ -13,16 +13,16 @@
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=JetBrains+Mono:wght@500&display=swap');
 
     :root{
-      --dark: #2b2f36;                 /* Dunkelgrau */
+      --dark: #3b424c;                 /* Dunkelgrau (heller) */
       --red:  #c0392b;                 /* Akzent-Rot */
       --redGlow: rgba(192,57,43,0.18);
       --bg: #f1f5f9;
       --text: #1e293b;
     }
 
-    /* Full-View-Policy: kein Scroll */
     html, body { height: 100%; }
-    body { background-color: var(--bg); font-family: 'Inter', sans-serif; color: var(--text); overflow: hidden; }
+    /* Scroll erlaubt */
+    body { background-color: var(--bg); font-family: 'Inter', sans-serif; color: var(--text); overflow: auto; }
 
     /* 13" Kompaktheit */
     header { padding-top: 1.2rem !important; padding-bottom: 1.0rem !important; }
@@ -58,9 +58,10 @@
     }
     input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
+    /* KEINE "aktiviert"-Optik, nur Text-Selection */
     input:focus, select:focus, textarea:focus {
-      border-color: var(--red);
-      box-shadow: 0 0 0 3px var(--redGlow);
+      border-color: #cbd5e1;
+      box-shadow: none;
       background: #fff;
     }
 
@@ -214,7 +215,7 @@
       text-align: center;
     }
 
-    /* Layout-Fix: Hauptbereich füllt Viewport, ohne Scroll */
+    /* Layout: Scroll erlaubt */
     .app {
       height: 100%;
       display: flex;
@@ -222,11 +223,18 @@
     }
     .main {
       flex: 1;
-      overflow: hidden;
+      overflow: auto;
     }
     .gridWrap {
-      height: 100%;
-      overflow: hidden;
+      height: auto;
+      overflow: visible;
+    }
+
+    /* Alle 3 Panels gleich hoch (500px) */
+    .panel-500{
+      height: 500px;
+      min-height: 500px;
+      overflow: auto;
     }
 
     /* Stückliste: Textfläche wächst bis Copy/Mail */
@@ -272,7 +280,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start h-full">
 
           <!-- LEFT: Inputs -->
-          <div class="lg:col-span-4 card p-6 space-y-5">
+          <div class="lg:col-span-4 card p-6 space-y-5 panel-500">
             <div>
               <label id="lbl-unit">Einheit & Maßbasis</label>
 
@@ -339,10 +347,10 @@
               <div>
                 <label id="lbl-btype">Boden</label>
 
-                <!-- Toggle: Boden innen | Boden außen -->
+                <!-- Toggle: innen | aussen -->
                 <div class="toggle-row" role="group" aria-label="Boden-Option">
-                  <button type="button" id="t-binside" class="toggle-btn active" onclick="setBottom('inside')">Boden innen</button>
-                  <button type="button" id="t-bbottom" class="toggle-btn" onclick="setBottom('bottom')">Boden außen</button>
+                  <button type="button" id="t-binside" class="toggle-btn active" onclick="setBottom('inside')">innen</button>
+                  <button type="button" id="t-bbottom" class="toggle-btn" onclick="setBottom('bottom')">aussen</button>
                 </div>
 
                 <select id="bottom-type" onchange="calculate()" class="hidden">
@@ -353,7 +361,6 @@
 
               <div>
                 <label id="lbl-bthick">Bodenstärke</label>
-                <!-- gleiche Höhe wie Toggle durch global height:44px -->
                 <input type="number" id="bottom-thick" value="18" min="0" step="0.1" oninput="calculate()">
               </div>
             </div>
@@ -371,7 +378,6 @@
                 Stückliste (Berechnet)
               </h2>
 
-              <!-- Eine große Textfläche -->
               <textarea id="cut-list-text" readonly></textarea>
             </div>
 
@@ -460,9 +466,9 @@
       mailcopied: "Mail-Text kopiert!",
       outsideShort: "Außenmaß",
       insideShort: "Innenmaß",
-      binsideShort: "Boden innen",
-      bbottomShort: "Boden außen",
-      tableHeader: "Menge\tTeil\tLänge\tBreite\tEinheit"
+      binsideShort: "innen",
+      bbottomShort: "aussen",
+      tableHeader: "Menge\tTeil\tLänge\tBreite\tEinheit\tHolzmaterial"
     },
     en: {
       title: "Schnittchen",
@@ -494,9 +500,9 @@
       mailcopied: "Email text copied!",
       outsideShort: "Outside",
       insideShort: "Inside",
-      binsideShort: "Bottom inside",
-      bbottomShort: "Bottom outside",
-      tableHeader: "Qty\tPart\tLength\tWidth\tUnit"
+      binsideShort: "inside",
+      bbottomShort: "outside",
+      tableHeader: "Qty\tPart\tLength\tWidth\tUnit\tWood"
     }
   };
 
@@ -627,7 +633,6 @@
       img.data[i]   = Math.min(255, img.data[i]   + n);
       img.data[i+1] = Math.min(255, img.data[i+1] + n);
       img.data[i+2] = Math.min(255, img.data[i+2] + n);
-      // alpha keep
     }
     ctx.putImageData(img,0,0);
 
@@ -671,7 +676,6 @@
 
   function updateWoodTextureOrientation(){
     if (!woodTex) return;
-    // "horizontal lines" are along X in texture space; rotate map if grainAxis is Z
     woodTex.rotation = (grainAxis === 'z') ? Math.PI / 2 : 0;
     woodTex.needsUpdate = true;
   }
@@ -773,7 +777,6 @@
 
     const toUnit = (mm) => mm / f;
 
-    // Textarea (lesbar + linksbündig)
     const pretty =
 `${2 * Q}x ${d.fr}    ${fmt(toUnit(fL))} × ${fmt(toUnit(wallH))} ${unit}
 ${2 * Q}x ${d.sides}  ${fmt(toUnit(sL))} × ${fmt(toUnit(wallH))} ${unit}
@@ -857,6 +860,7 @@ ${1 * Q}x ${d.bottom} ${fmt(toUnit(bL))} × ${fmt(toUnit(bW))} ${unit}`;
     const d = dict[lang];
 
     const Q = Math.max(1, parseInt(document.getElementById('qty').value) || 1);
+    const wood = (document.getElementById('wood-type').value || "").trim();
 
     // Recompute same dims as in calculate (lightweight)
     const f = factorToMM(unit);
@@ -888,9 +892,9 @@ ${1 * Q}x ${d.bottom} ${fmt(toUnit(bL))} × ${fmt(toUnit(bW))} ${unit}`;
     const toUnit = (mm) => mm / f;
 
     const rows = [
-      [2*Q, d.fr,    fmt(toUnit(fL)),    fmt(toUnit(wallH)), unit],
-      [2*Q, d.sides, fmt(toUnit(sL)),    fmt(toUnit(wallH)), unit],
-      [1*Q, d.bottom,fmt(toUnit(bL)),    fmt(toUnit(bW)),    unit],
+      [2*Q, d.fr,     fmt(toUnit(fL)),   fmt(toUnit(wallH)), unit, wood],
+      [2*Q, d.sides,  fmt(toUnit(sL)),   fmt(toUnit(wallH)), unit, wood],
+      [1*Q, d.bottom, fmt(toUnit(bL)),   fmt(toUnit(bW)),    unit, wood],
     ];
 
     const tsv = [d.tableHeader, ...rows.map(r => r.join('\t'))].join('\n');
