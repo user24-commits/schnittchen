@@ -20,12 +20,11 @@
       --blue: #3b82f6;
       --blueBg: #eff6ff;
 
-      /* wird per JS auf Höhe der linken Spalte gesetzt */
-      --panelH: 420px;
+      /* Höhe für Mitte/Rechts wird dynamisch auf Linke Karte gesetzt */
+      --panelH: 460px;
     }
 
     html, body { height: 100%; }
-    /* 1) Ganze Seite scrollbar */
     body {
       background-color: var(--bg);
       font-family: 'Inter', sans-serif;
@@ -44,12 +43,12 @@
     /* Nur "Schnittchen" im Header ausblenden – Rest bleibt */
     #hdr-title { display: none; }
 
-    /* 2) Linke Spalte endet nach Wandstärke/Material (kein künstliches Strecken) */
-    .left-panel { height: auto; overflow: visible; }
+    /* LINKS: soll wirklich nach Content enden */
+    #panel-left { height: auto; overflow: visible; }
 
-    /* Mittlere & rechte Spalte: gleiche Höhe wie links (per --panelH) */
-    .mid-panel { height: var(--panelH); display:flex; flex-direction: column; overflow: visible; }
-    .right-panel { height: var(--panelH); }
+    /* MITTE/RECHTS: exakt so hoch wie links, unten bündig */
+    #panel-mid { height: var(--panelH); display:flex; flex-direction: column; overflow: hidden; }
+    #panel-right { height: var(--panelH); }
 
     .list-grow { flex: 1; display:flex; flex-direction: column; min-height: 0; gap: 0.6rem; }
     #cut-list-text { flex: 1; min-height: 0; }
@@ -74,12 +73,13 @@
     textarea{
       height: auto;
       min-height: 0;
-      text-align: left;
-      /* 3) Stückliste: optisch weiter Richtung Mitte (mehr linker Innenabstand) */
-      padding: 1.25rem 1.6rem 1.25rem 2.35rem;
+      text-align: left; /* linksbündig */
+      /* 3) Stückliste: weiter Richtung Mitte (mehr Innenabstand links), NICHT zentriert */
+      padding: 1.25rem 1.45rem 1.25rem 2.45rem;
       line-height: 1.35;
       white-space: pre;
       resize: none;
+      overflow: hidden; /* Liste ist kurz; kein internes Scrollen nötig */
     }
 
     input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
@@ -276,8 +276,8 @@
       <div class="gridWrap">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-          <!-- LEFT: Inputs (endet optisch nach Wandstärke + Material) -->
-          <div id="panel-left" class="lg:col-span-4 card p-6 space-y-5 left-panel">
+          <!-- LEFT -->
+          <div id="panel-left" class="lg:col-span-4 card p-6 space-y-5">
 
             <div>
               <label id="lbl-unit">Maße</label>
@@ -299,7 +299,6 @@
               </select>
             </div>
 
-            <!-- Menge + Maße -->
             <div class="py-4 border-y border-slate-100">
               <div class="grid grid-cols-12 gap-3 items-end">
                 <div class="col-span-2">
@@ -366,13 +365,12 @@
             </div>
           </div>
 
-          <!-- MIDDLE: Stückliste -->
-          <div id="panel-mid" class="lg:col-span-4 card p-6 mid-panel">
+          <!-- MIDDLE -->
+          <div id="panel-mid" class="lg:col-span-4 card p-6">
             <div class="list-grow">
               <h2 class="font-black uppercase text-slate-400 text-[10px] tracking-widest text-center" id="lbl-list">
                 Stückliste (Berechnet)
               </h2>
-
               <textarea id="cut-list-text" readonly></textarea>
             </div>
 
@@ -382,9 +380,9 @@
             </div>
           </div>
 
-          <!-- RIGHT: 3D -->
+          <!-- RIGHT -->
           <div class="lg:col-span-4">
-            <div id="panel-right" class="bg-slate-900 rounded-2xl overflow-hidden shadow-xl relative border-b-8 right-panel" style="border-color: var(--red);">
+            <div id="panel-right" class="bg-slate-900 rounded-2xl overflow-hidden shadow-xl relative border-b-8" style="border-color: var(--red);">
               <div id="canvas-container" class="w-full h-full"></div>
             </div>
           </div>
@@ -516,7 +514,7 @@
     return (d === 0) ? s : s.replace(/\.?0+$/, (m) => m === '.' ? '' : m);
   }
 
-  /* 2) Höhe der mittleren/rechten Spalte an linke Spalte koppeln */
+  /* 2) Mitte + Rechts exakt an Höhe von Links anpassen (unten bündig) */
   function syncPanelHeights(){
     const left = document.getElementById('panel-left');
     if (!left) return;
@@ -524,7 +522,7 @@
     const h = left.offsetHeight;
     if (h > 0) document.documentElement.style.setProperty('--panelH', h + 'px');
 
-    // 3D-Canvas nach Höhenanpassung sauber nachziehen
+    // 3D-Canvas sauber nachziehen
     if (renderer && camera) {
       const container = document.getElementById('canvas-container');
       const w = container.clientWidth || 1;
@@ -719,12 +717,11 @@
     ensureWoodMaterial();
 
     window.addEventListener('resize', () => {
-      syncPanelHeights(); // koppelt auch 3D-Resize an neue Panelhöhe
+      syncPanelHeights();
     });
 
     calculate();
     animate();
-
     requestAnimationFrame(syncPanelHeights);
   }
 
@@ -750,8 +747,8 @@
     const T = T_u * f;
     const BT = BT_u * f;
 
-    const bType = document.getElementById('bottom-type').value;
-    const mode = document.getElementById('type').value;
+    const bType = document.getElementById('bottom-type').value; // inside | bottom
+    const mode = document.getElementById('type').value;         // outside | inside
 
     let fL, sL, bL, bW, wallH;
     let outerL, outerW;
@@ -773,16 +770,23 @@
         bW = W;
       }
     } else {
+      /* INSIDE MODE: L/W/H sind Innenmaße (lichte Maße) */
       outerL = L + (2 * T);
       outerW = W + (2 * T);
 
-      fL = L + (2 * T);
-      sL = W;
+      fL = L + (2 * T); // Front/Rück läuft über gesamte Außenlänge
+      sL = W;           // Seiten: Außenbreite ergibt sich aus Innenbreite (W) mit Seitenwänden als Dicke
 
-      wallH = H;
+      wallH = H;        // Innenhöhe bleibt H, Boden "außen" liegt darunter
 
-      bL = L;
-      bW = W;
+      /* 4) FIX: Innenmaß + Boden außen -> Boden muss AUßENmaß haben */
+      if (bType === 'bottom') {
+        bL = outerL;
+        bW = outerW;
+      } else {
+        bL = L;
+        bW = W;
+      }
     }
 
     fL = Math.max(0, fL);
@@ -841,6 +845,7 @@ ${1 * Q}x ${d.bottom} ${fmt(toUnit(bL))} × ${fmt(toUnit(bW))} ${unit}`;
       parts.push(mesh);
     };
 
+    // Boden (inside: sitzt innen -> unterhalb der Wände; bottom: sitzt außen -> Wände auf Boden)
     box(bL, BT, bW, 0, BT / 2, 0);
 
     const yBase = (bType === 'bottom') ? BT : 0;
@@ -868,7 +873,6 @@ ${1 * Q}x ${d.bottom} ${fmt(toUnit(bL))} × ${fmt(toUnit(bW))} ${unit}`;
     setTimeout(() => btn.classList.remove('active'), 450);
   }
 
-  /* 4) Tabelle: kein Minus vor Menge */
   function copyTableExcel() {
     const d = dict[lang];
 
@@ -886,18 +890,23 @@ ${1 * Q}x ${d.bottom} ${fmt(toUnit(bL))} × ${fmt(toUnit(bW))} ${unit}`;
     const bType = document.getElementById('bottom-type').value;
     const mode = document.getElementById('type').value;
 
-    let fL, sL, bL, bW, wallH;
+    let fL, sL, bL, bW, wallH, outerL, outerW;
+
     if (mode === 'outside') {
+      outerL = L; outerW = W;
       fL = L;
       sL = W - (2 * T);
       wallH = (bType === 'bottom') ? (H - BT) : H;
       if (bType === 'inside') { bL = L - (2 * T); bW = W - (2 * T); }
       else { bL = L; bW = W; }
     } else {
+      outerL = L + (2 * T);
+      outerW = W + (2 * T);
       fL = L + (2 * T);
       sL = W;
       wallH = H;
-      bL = L; bW = W;
+      if (bType === 'bottom') { bL = outerL; bW = outerW; }
+      else { bL = L; bW = W; }
     }
 
     fL = Math.max(0,fL); sL=Math.max(0,sL); bL=Math.max(0,bL); bW=Math.max(0,bW); wallH=Math.max(0,wallH);
@@ -923,7 +932,6 @@ ${1 * Q}x ${d.bottom} ${fmt(toUnit(bL))} × ${fmt(toUnit(bW))} ${unit}`;
     });
   }
 
-  /* 5) Projektnummer: Datum + NUR 3 Ziffern (ohne hhmm) */
   function genProjectId() {
     const now = new Date();
     const pad2 = (n) => String(n).padStart(2, '0');
