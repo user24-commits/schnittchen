@@ -13,15 +13,15 @@
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=JetBrains+Mono:wght@500&display=swap');
 
     :root{
-      --dark: #3b424c;                 /* Dunkelgrau (heller) */
-      --red:  #c0392b;                 /* Akzent-Rot */
-      --redGlow: rgba(192,57,43,0.18);
+      --dark: #3b424c;
+      --red:  #c0392b;
       --bg: #f1f5f9;
       --text: #1e293b;
+      --blue: #3b82f6;
+      --blueBg: #eff6ff;
     }
 
     html, body { height: 100%; }
-    /* Scroll erlaubt */
     body { background-color: var(--bg); font-family: 'Inter', sans-serif; color: var(--text); overflow: auto; }
 
     /* 13" Kompaktheit */
@@ -32,37 +32,39 @@
     .space-y-5 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.85rem !important; }
     .py-4 { padding-top: 0.75rem !important; padding-bottom: 0.75rem !important; }
 
-    /* Inputs: gleiche Höhe (Header-Alignment) + Auto-Select */
+    /* Inputs */
     input, select, textarea {
       font-family: 'JetBrains Mono', monospace;
       text-align: center;
       width: 100%;
-      height: 44px;                 /* identische Höhe */
+      height: 44px;
       padding: 0.65rem;
       border: 1px solid #cbd5e1;
       border-radius: 0.6rem;
       background: #ffffff;
       outline: none;
-      transition: all 0.15s;
+      transition: all 0.12s;
       appearance: none;
       -moz-appearance: textfield;
+      user-select: text;
+      caret-color: var(--blue);
     }
     textarea{
       height: auto;
       min-height: 0;
-      text-align: left;             /* Stückliste linksbündig */
-      padding: 0.9rem;              /* ausreichend Padding */
+      text-align: left;
+      padding: 1.15rem 1.15rem 1.15rem 1.35rem; /* nicht so nah links */
       line-height: 1.35;
       white-space: pre;
       resize: none;
     }
     input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
-    /* KEINE "aktiviert"-Optik, nur Text-Selection */
-    input:focus, select:focus, textarea:focus {
-      border-color: #cbd5e1;
-      box-shadow: none;
-      background: #fff;
+    /* One-click active style (blau markiert) */
+    .oneclick-active{
+      border-color: var(--blue) !important;
+      background: var(--blueBg) !important;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.15) !important;
     }
 
     label {
@@ -76,44 +78,31 @@
       text-align: center;
     }
 
-    /* Buttons nur farbig wenn aktiv */
-    .btn-pill {
-      background: #e2e8f0;
-      color: #64748b;
-      font-weight: 800;
-      font-size: 0.7rem;
-      padding: 0.55rem 0.6rem;
-      transition: all 0.15s;
-      flex: 1;
-      border-radius: 0.6rem;
-    }
-    .btn-pill.active { background: var(--dark); color: white; box-shadow: inset 0 -3px 0 var(--red); }
-
     .card {
       background: white;
       border: 1px solid #e2e8f0;
       box-shadow: 0 4px 12px rgba(0,0,0,0.03);
     }
 
-    /* Toggle statt Dropdown */
+    /* Toggle rows */
     .toggle-row{
       display:flex;
       gap:0.35rem;
       background: #eef2f7;
       border: 1px solid #e2e8f0;
-      border-radius: 0.9rem;
+      border-radius: 0.95rem;
       padding: 0.28rem;
       align-items: stretch;
-      height: 44px; /* gleiche Höhe wie Inputs */
+      height: 44px;
     }
     .toggle-btn{
       flex:1;
-      border-radius: 0.7rem;
+      border-radius: 0.75rem;
       font-weight: 900;
       font-size: 0.7rem;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
-      background: rgba(255,255,255,0.8);
+      background: rgba(255,255,255,0.9);
       color:#475569;
       border: 1px solid rgba(226,232,240,1);
       transition: all 0.15s;
@@ -131,11 +120,44 @@
       box-shadow: inset 0 -3px 0 var(--red);
     }
 
+    /* Cleaner Unit Row */
+    .unit-row{
+      display:flex;
+      gap:0.35rem;
+      background:#eef2f7;
+      border:1px solid #e2e8f0;
+      border-radius:0.95rem;
+      padding:0.28rem;
+      height:44px;
+      align-items:stretch;
+    }
+    .btn-pill{
+      flex:1;
+      height:100%;
+      padding:0 0.6rem;
+      border:1px solid rgba(226,232,240,1);
+      background:rgba(255,255,255,0.9);
+      color:#475569;
+      border-radius:0.75rem;
+      font-weight:900;
+      font-size:0.7rem;
+      letter-spacing:0.08em;
+      text-transform:uppercase;
+      transition: all 0.15s;
+      user-select:none;
+    }
+    .btn-pill.active{
+      background:var(--dark);
+      border-color:var(--dark);
+      color:#fff;
+      box-shadow: inset 0 -3px 0 var(--red);
+    }
+
     /* Swap-Button (Länge/Breite) */
     .swap-btn{
       width: 44px;
       height: 44px;
-      border-radius: 0.7rem;
+      border-radius: 0.75rem;
       border: 1px solid #e2e8f0;
       background: #ffffff;
       display:flex;
@@ -148,15 +170,8 @@
       border-color: #cbd5e1;
       box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     }
-    .swap-btn:active{
-      transform: translateY(1px);
-    }
-    .swap-icon{
-      width: 20px; height: 20px;
-      stroke: var(--dark);
-      stroke-width: 2.2;
-      fill: none;
-    }
+    .swap-btn:active{ transform: translateY(1px); }
+    .swap-icon{ width: 20px; height: 20px; stroke: var(--dark); stroke-width: 2.2; fill: none; }
 
     /* Action Buttons */
     .action-btn {
@@ -215,46 +230,17 @@
       text-align: center;
     }
 
-    /* Layout: Scroll erlaubt */
-    .app {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-    }
-    .main {
-      flex: 1;
-      overflow: auto;
-    }
-    .gridWrap {
-      height: auto;
-      overflow: visible;
-    }
+    /* Layout */
+    .app { height: 100%; display: flex; flex-direction: column; }
+    .main { flex: 1; overflow: auto; }
+    .gridWrap { height: auto; overflow: visible; }
 
-    /* Alle 3 Panels gleich hoch (500px) */
-    .panel-500{
-      height: 500px;
-      min-height: 500px;
-      overflow: auto;
-    }
+    /* Panels */
+    .panel-500{ height: 500px; min-height: 500px; overflow: auto; }
 
-    /* Stückliste: Textfläche wächst bis Copy/Mail */
-    .list-card {
-      display:flex;
-      flex-direction: column;
-      height: 500px;
-      min-height: 500px;
-    }
-    .list-grow {
-      flex: 1;
-      display:flex;
-      flex-direction: column;
-      min-height: 0;
-      gap: 0.6rem;
-    }
-    #cut-list-text {
-      flex: 1;
-      min-height: 0;
-    }
+    .list-card { display:flex; flex-direction: column; height: 500px; min-height: 500px; }
+    .list-grow { flex: 1; display:flex; flex-direction: column; min-height: 0; gap: 0.6rem; }
+    #cut-list-text { flex: 1; min-height: 0; }
   </style>
 </head>
 
@@ -281,16 +267,18 @@
 
           <!-- LEFT: Inputs -->
           <div class="lg:col-span-4 card p-6 space-y-5 panel-500">
-            <div>
-              <label id="lbl-unit">Einheit & Maßbasis</label>
 
-              <div class="flex bg-slate-100 rounded-xl overflow-hidden p-1 gap-1 mb-2">
+            <div>
+              <label id="lbl-unit">Maße</label>
+
+              <!-- Units: mm | cm | inch -->
+              <div class="unit-row mb-2">
                 <button onclick="setUnit('mm')" id="u-mm" class="btn-pill active">MM</button>
                 <button onclick="setUnit('cm')" id="u-cm" class="btn-pill">CM</button>
                 <button onclick="setUnit('inch')" id="u-inch" class="btn-pill">INCH</button>
               </div>
 
-              <!-- Toggle: Außenmaß | Innenmaß (statt Dropdown) -->
+              <!-- Toggle: Außenmaß | Innenmaß -->
               <div class="toggle-row" role="group" aria-label="Maß-Referenz">
                 <button type="button" id="t-outside" class="toggle-btn active" onclick="setMode('outside')">Außenmaß</button>
                 <button type="button" id="t-inside" class="toggle-btn" onclick="setMode('inside')">Innenmaß</button>
@@ -303,20 +291,14 @@
               </select>
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label id="lbl-qty">Menge</label>
-                <input type="number" id="qty" value="1" min="1" step="1" oninput="calculate()">
-              </div>
-              <div>
-                <label id="lbl-thick">Wandstärke</label>
-                <input type="number" id="thickness" value="18" min="0" step="0.1" oninput="calculate()">
-              </div>
-            </div>
-
-            <!-- Länge/Breite/Höhe + Swap -->
+            <!-- Menge + Länge/Breite/Höhe in EINER Linie -->
             <div class="py-4 border-y border-slate-100">
-              <div class="grid grid-cols-7 gap-3 items-end">
+              <div class="grid grid-cols-12 gap-3 items-end">
+                <div class="col-span-2">
+                  <label id="lbl-qty">Menge</label>
+                  <input type="number" id="qty" value="1" min="1" step="1" oninput="calculate()">
+                </div>
+
                 <div class="col-span-3">
                   <label id="lbl-len">Länge</label>
                   <input type="number" id="length" value="400" min="0" step="0.1" oninput="onDimInput('length'); calculate()">
@@ -336,7 +318,7 @@
                   <input type="number" id="width" value="300" min="0" step="0.1" oninput="onDimInput('width'); calculate()">
                 </div>
 
-                <div class="col-span-7 mt-3">
+                <div class="col-span-3">
                   <label id="lbl-height">Höhe</label>
                   <input type="number" id="height" value="150" min="0" step="0.1" oninput="calculate()">
                 </div>
@@ -347,7 +329,6 @@
               <div>
                 <label id="lbl-btype">Boden</label>
 
-                <!-- Toggle: innen | aussen -->
                 <div class="toggle-row" role="group" aria-label="Boden-Option">
                   <button type="button" id="t-binside" class="toggle-btn active" onclick="setBottom('inside')">innen</button>
                   <button type="button" id="t-bbottom" class="toggle-btn" onclick="setBottom('bottom')">aussen</button>
@@ -365,9 +346,16 @@
               </div>
             </div>
 
-            <div>
-              <label id="lbl-wood">Material</label>
-              <input type="text" id="wood-type" value="Multiplex Birke" oninput="calculate()">
+            <!-- Material & Wandstärke in EINER Linie -->
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label id="lbl-thick">Wandstärke</label>
+                <input type="number" id="thickness" value="18" min="0" step="0.1" oninput="calculate()">
+              </div>
+              <div>
+                <label id="lbl-wood">Material</label>
+                <input type="text" id="wood-type" value="Multiplex Birke" oninput="calculate()">
+              </div>
             </div>
           </div>
 
@@ -382,7 +370,7 @@
             </div>
 
             <div class="mt-3 pt-3 border-t space-y-2">
-              <button id="btn-copy" onclick="copyTableExcel()" class="action-btn">Tabelle kopieren (Excel/Numbers)</button>
+              <button id="btn-copy" onclick="copyTableExcel()" class="action-btn">Tabelle kopieren (Numbers/Excel)</button>
               <button id="btn-mail" onclick="copyEmail()" class="action-btn">Mail (TXT)</button>
             </div>
           </div>
@@ -408,7 +396,7 @@
 
             <div class="card p-4 flex flex-col justify-center">
               <div class="metric-title" id="lbl-price-label">Preis / m²</div>
-              <input type="number" id="price-sqm" value="45" min="0" step="0.01" oninput="calculate()">
+              <input type="number" id="price-sqm" value="49.51" min="0" step="0.01" oninput="calculate()">
             </div>
 
             <div class="card p-4 flex flex-col justify-center">
@@ -429,7 +417,7 @@
   let unit = 'mm';
   let lang = 'de';
 
-  // Maserung: erstes eingegebenes Maß definiert Richtung (length => X, width => Z)
+  // Maserung: erstes eingegebenes Maß definiert Richtung
   let grainAxis = null; // 'x' | 'z'
   let woodTex = null;
   let woodMat = null;
@@ -439,7 +427,7 @@
     de: {
       title: "Schnittchen",
       sub: "Der smarte Zuschnitt- & Box-Planer",
-      unit: "Einheit & Maßbasis",
+      unit: "Maße",
       outside: "Außenmaß (Standard)",
       inside: "Innenmaß (Lichtes Maß)",
       qty: "Menge",
@@ -457,7 +445,7 @@
       area: "Materialbedarf",
       "price-label": "Preis / m²",
       total: "Gesamtpreis",
-      copy: "Tabelle kopieren (Excel/Numbers)",
+      copy: "Tabelle kopieren (Numbers/Excel)",
       mail: "Mail (TXT)",
       fr: "Front/Rück",
       sides: "Seiten",
@@ -468,12 +456,12 @@
       insideShort: "Innenmaß",
       binsideShort: "innen",
       bbottomShort: "aussen",
-      tableHeader: "Menge\tTeil\tLänge\tBreite\tEinheit\tHolzmaterial"
+      tableHeader: "Menge\tTeil\tLänge\tBreite\tMaße\tMaterial"
     },
     en: {
       title: "Schnittchen",
       sub: "Smart cut list & box planner",
-      unit: "Unit & Basis",
+      unit: "Dimensions",
       outside: "Outside dims (default)",
       inside: "Inside dims (clear)",
       qty: "Quantity",
@@ -491,7 +479,7 @@
       area: "Material (area)",
       "price-label": "Price / m²",
       total: "Total price",
-      copy: "Copy table (Excel/Numbers)",
+      copy: "Copy table (Numbers/Excel)",
       mail: "Email (TXT)",
       fr: "Front/Back",
       sides: "Sides",
@@ -502,17 +490,25 @@
       insideShort: "Inside",
       binsideShort: "inside",
       bbottomShort: "outside",
-      tableHeader: "Qty\tPart\tLength\tWidth\tUnit\tWood"
+      tableHeader: "Qty\tPart\tLength\tWidth\tDims\tMaterial"
     }
   };
 
   // --- Units
   const factorToMM = (u) => (u === 'mm' ? 1 : (u === 'cm' ? 10 : 25.4));
 
-  function fmt(n, digits = 1) {
+  function digitsForUnit(u){
+    if (u === 'mm') return 0;     // mm: keine Nachkommastellen
+    if (u === 'cm') return 1;     // cm: 1 Nachkommastelle (falls nötig)
+    if (u === 'inch') return 3;   // inch: wie gehabt
+    return 1;
+  }
+
+  function fmt(n) {
     if (!isFinite(n)) return "0";
-    const d = (unit === 'inch') ? 3 : digits;
-    return Number(n).toFixed(d).replace(/\.?0+$/, (m) => m === '.' ? '' : m);
+    const d = digitsForUnit(unit);
+    const s = Number(n).toFixed(d);
+    return (d === 0) ? s : s.replace(/\.?0+$/, (m) => m === '.' ? '' : m);
   }
 
   function setLang(l) {
@@ -524,14 +520,12 @@
     document.getElementById('hdr-title').innerText = d.title;
     document.getElementById('hdr-sub').innerText = d.sub;
 
-    // Labels/options
     const keys = Object.keys(d);
     keys.forEach(key => {
       const el = document.getElementById('lbl-' + key) || document.getElementById('opt-' + key);
       if (el) el.innerText = d[key];
     });
 
-    // Toggle button texts
     document.getElementById('t-outside').innerText = d.outsideShort || d.outside;
     document.getElementById('t-inside').innerText  = d.insideShort  || d.inside;
     document.getElementById('t-binside').innerText = d.binsideShort || d.binside;
@@ -553,11 +547,17 @@
     ['length','width','height','thickness','bottom-thick'].forEach(id => {
       const el = document.getElementById(id);
       const v = parseFloat(el.value);
-      if (isFinite(v)) el.value = (v * ratio).toFixed(u === 'inch' ? 3 : 1).replace(/\.?0+$/, (m)=> m==='.'?'':m);
+      if (isFinite(v)) {
+        const d = digitsForUnit(u);
+        el.value = (v * ratio).toFixed(d).replace(/\.?0+$/, (m)=> m==='.'?'':m);
+      }
     });
 
     unit = u;
-    ['mm','cm','inch'].forEach(x => document.getElementById('u-' + x).classList.remove('active'));
+    ['mm','cm','inch'].forEach(x => {
+      const b = document.getElementById('u-' + x);
+      if (b) b.classList.remove('active');
+    });
     document.getElementById('u-' + u).classList.add('active');
 
     calculate();
@@ -584,14 +584,28 @@
     calculate();
   }
 
-  // --- Auto-select (alle Inputs/Textareas)
+  // --- One-click select + blue highlight
+  function focusSelect(el){
+    el.classList.add('oneclick-active');
+    el.focus({preventScroll:true});
+    requestAnimationFrame(() => {
+      try { el.select(); } catch(e) {}
+    });
+  }
+
   function wireSelectAll() {
     document.querySelectorAll('input, textarea').forEach(el => {
-      el.addEventListener('pointerdown', () => {
-        el.focus({preventScroll:true});
-        requestAnimationFrame(() => el.select());
+      el.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        focusSelect(el);
       });
-      el.addEventListener('focus', () => el.select());
+      el.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        focusSelect(el);
+      }, {passive:false});
+
+      el.addEventListener('focus', () => el.classList.add('oneclick-active'));
+      el.addEventListener('blur', () => el.classList.remove('oneclick-active'));
     });
   }
 
@@ -613,20 +627,18 @@
     calculate();
   }
 
-  // --- 3D Wood Texture (Birke Multiplex + horizontale Linien)
+  // --- 3D Wood Texture
   function makeBirchTextureCanvas(){
     const c = document.createElement('canvas');
     c.width = 512; c.height = 512;
     const ctx = c.getContext('2d');
 
-    // Base gradient
     const g = ctx.createLinearGradient(0,0,512,512);
     g.addColorStop(0, '#f3e7cf');
     g.addColorStop(1, '#efe1c5');
     ctx.fillStyle = g;
     ctx.fillRect(0,0,512,512);
 
-    // Soft noise
     const img = ctx.getImageData(0,0,512,512);
     for (let i=0;i<img.data.length;i+=4){
       const n = (Math.random()*10)|0;
@@ -636,7 +648,6 @@
     }
     ctx.putImageData(img,0,0);
 
-    // Horizontal grain lines (dezent)
     ctx.globalAlpha = 0.18;
     ctx.strokeStyle = 'rgba(120,85,55,0.55)';
     ctx.lineWidth = 1;
@@ -665,11 +676,7 @@
     woodTex.repeat.set(1.6, 1.6);
     woodTex.center.set(0.5,0.5);
 
-    woodMat = new THREE.MeshLambertMaterial({
-      map: woodTex,
-      color: 0xffffff
-    });
-
+    woodMat = new THREE.MeshLambertMaterial({ map: woodTex, color: 0xffffff });
     edgeMat = new THREE.LineBasicMaterial({ color: 0x94a3b8 });
     updateWoodTextureOrientation();
   }
@@ -855,14 +862,13 @@ ${1 * Q}x ${d.bottom} ${fmt(toUnit(bL))} × ${fmt(toUnit(bW))} ${unit}`;
     setTimeout(() => btn.classList.remove('active'), 450);
   }
 
-  // Copy: Excel/Numbers (TSV)
+  // Copy: TSV – erste Zahl in Klammern
   function copyTableExcel() {
     const d = dict[lang];
 
     const Q = Math.max(1, parseInt(document.getElementById('qty').value) || 1);
     const wood = (document.getElementById('wood-type').value || "").trim();
 
-    // Recompute same dims as in calculate (lightweight)
     const f = factorToMM(unit);
     const L_u = parseFloat(document.getElementById('length').value) || 0;
     const W_u = parseFloat(document.getElementById('width').value) || 0;
@@ -891,10 +897,16 @@ ${1 * Q}x ${d.bottom} ${fmt(toUnit(bL))} × ${fmt(toUnit(bW))} ${unit}`;
     fL = Math.max(0,fL); sL=Math.max(0,sL); bL=Math.max(0,bL); bW=Math.max(0,bW); wallH=Math.max(0,wallH);
     const toUnit = (mm) => mm / f;
 
+    const modeLabel = (lang === 'de')
+      ? (mode === 'outside' ? dict.de.outsideShort : dict.de.insideShort)
+      : (mode === 'outside' ? dict.en.outsideShort : dict.en.insideShort);
+
+    const dimsCol = `${unit} | ${modeLabel}`;
+
     const rows = [
-      [2*Q, d.fr,     fmt(toUnit(fL)),   fmt(toUnit(wallH)), unit, wood],
-      [2*Q, d.sides,  fmt(toUnit(sL)),   fmt(toUnit(wallH)), unit, wood],
-      [1*Q, d.bottom, fmt(toUnit(bL)),   fmt(toUnit(bW)),    unit, wood],
+      [`(${2*Q})`, d.fr,     fmt(toUnit(fL)),   fmt(toUnit(wallH)), dimsCol, wood],
+      [`(${2*Q})`, d.sides,  fmt(toUnit(sL)),   fmt(toUnit(wallH)), dimsCol, wood],
+      [`(${1*Q})`, d.bottom, fmt(toUnit(bL)),   fmt(toUnit(bW)),    dimsCol, wood],
     ];
 
     const tsv = [d.tableHeader, ...rows.map(r => r.join('\t'))].join('\n');
@@ -988,7 +1000,6 @@ A customer`;
     init3D();
     setLang('de');
 
-    // initial toggle sync
     setMode(document.getElementById('type').value || 'outside');
     setBottom(document.getElementById('bottom-type').value || 'inside');
   };
