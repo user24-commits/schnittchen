@@ -32,6 +32,9 @@
     .space-y-5 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.85rem !important; }
     .py-4 { padding-top: 0.75rem !important; padding-bottom: 0.75rem !important; }
 
+    /* NUR: "Schnittchen" im Header ausblenden (Subtitle bleibt) */
+    #hdr-title { display: none; }
+
     /* Inputs */
     input, select, textarea {
       font-family: 'JetBrains Mono', monospace;
@@ -284,7 +287,6 @@
                 <button type="button" id="t-inside" class="toggle-btn" onclick="setMode('inside')">Innenmaß</button>
               </div>
 
-              <!-- hidden select bleibt für bestehende Logik -->
               <select id="type" onchange="calculate()" class="hidden">
                 <option value="outside" id="opt-outside">Außenmaß (Standard)</option>
                 <option value="inside" id="opt-inside">Innenmaß (Lichtes Maß)</option>
@@ -417,7 +419,6 @@
   let unit = 'mm';
   let lang = 'de';
 
-  // Maserung: erstes eingegebenes Maß definiert Richtung
   let grainAxis = null; // 'x' | 'z'
   let woodTex = null;
   let woodMat = null;
@@ -498,9 +499,9 @@
   const factorToMM = (u) => (u === 'mm' ? 1 : (u === 'cm' ? 10 : 25.4));
 
   function digitsForUnit(u){
-    if (u === 'mm') return 0;     // mm: keine Nachkommastellen
-    if (u === 'cm') return 1;     // cm: 1 Nachkommastelle (falls nötig)
-    if (u === 'inch') return 3;   // inch: wie gehabt
+    if (u === 'mm') return 0;
+    if (u === 'cm') return 1;
+    if (u === 'inch') return 3;
     return 1;
   }
 
@@ -517,7 +518,7 @@
     document.getElementById('l-en').className = l === 'en' ? 'lang-btn active' : 'lang-btn inactive';
 
     const d = dict[lang];
-    document.getElementById('hdr-title').innerText = d.title;
+    document.getElementById('hdr-title').innerText = d.title;   // bleibt im DOM, ist aber per CSS versteckt
     document.getElementById('hdr-sub').innerText = d.sub;
 
     const keys = Object.keys(d);
@@ -563,7 +564,6 @@
     calculate();
   }
 
-  // --- Toggle logic
   function setMode(mode){
     const sel = document.getElementById('type');
     sel.value = mode;
@@ -609,7 +609,6 @@
     });
   }
 
-  // --- Maserung: erstes eingegebenes Maß
   function onDimInput(which){
     if (!grainAxis) {
       grainAxis = (which === 'length') ? 'x' : 'z';
@@ -617,7 +616,6 @@
     }
   }
 
-  // --- Swap Länge/Breite
   function swapLW(){
     const l = document.getElementById('length');
     const w = document.getElementById('width');
@@ -627,7 +625,6 @@
     calculate();
   }
 
-  // --- 3D Wood Texture
   function makeBirchTextureCanvas(){
     const c = document.createElement('canvas');
     c.width = 512; c.height = 512;
@@ -687,7 +684,6 @@
     woodTex.needsUpdate = true;
   }
 
-  // --- 3D
   function init3D() {
     const container = document.getElementById('canvas-container');
     scene = new THREE.Scene();
@@ -741,8 +737,8 @@
     const T = T_u * f;
     const BT = BT_u * f;
 
-    const bType = document.getElementById('bottom-type').value; // inside | bottom
-    const mode = document.getElementById('type').value; // outside | inside
+    const bType = document.getElementById('bottom-type').value;
+    const mode = document.getElementById('type').value;
 
     let fL, sL, bL, bW, wallH;
     let outerL, outerW;
@@ -793,7 +789,6 @@ ${1 * Q}x ${d.bottom} ${fmt(toUnit(bL))} × ${fmt(toUnit(bW))} ${unit}`;
 
     update3D({ outerL, outerW, bL, bW, wallH, T, BT, bType });
 
-    // Area
     const area_mm2 = ((2 * fL * wallH) + (2 * sL * wallH) + (bL * bW)) * Q;
     const area_m2 = area_mm2 / 1_000_000;
     document.getElementById('val-area').innerText = area_m2.toFixed(2) + " m²";
@@ -801,7 +796,6 @@ ${1 * Q}x ${d.bottom} ${fmt(toUnit(bL))} × ${fmt(toUnit(bW))} ${unit}`;
     const price = parseFloat(document.getElementById('price-sqm').value) || 0;
     document.getElementById('val-price').innerText = (area_m2 * price).toFixed(2) + " €";
 
-    // Volume
     let Lin, Win, Hin;
     if (mode === 'inside') {
       Lin = L; Win = W; Hin = H;
@@ -832,10 +826,8 @@ ${1 * Q}x ${d.bottom} ${fmt(toUnit(bL))} × ${fmt(toUnit(bW))} ${unit}`;
       parts.push(mesh);
     };
 
-    // Boden
     box(bL, BT, bW, 0, BT / 2, 0);
 
-    // Wände
     const yBase = (bType === 'bottom') ? BT : 0;
     const yW = yBase + wallH / 2;
 
@@ -849,7 +841,6 @@ ${1 * Q}x ${d.bottom} ${fmt(toUnit(bL))} × ${fmt(toUnit(bW))} ${unit}`;
     box(T, wallH, sideDepth, (xOuterHalf - T / 2), yW, 0);
     box(T, wallH, sideDepth, -(xOuterHalf - T / 2), yW, 0);
 
-    // Camera framing
     const max = Math.max(outerL, outerW, wallH + BT);
     camera.position.set(max * 1.6, max * 1.2, max * 1.6);
     controls.target.set(0, (yBase + wallH) / 2, 0);
@@ -862,7 +853,6 @@ ${1 * Q}x ${d.bottom} ${fmt(toUnit(bL))} × ${fmt(toUnit(bW))} ${unit}`;
     setTimeout(() => btn.classList.remove('active'), 450);
   }
 
-  // Copy: TSV – erste Zahl in Klammern
   function copyTableExcel() {
     const d = dict[lang];
 
