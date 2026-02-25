@@ -19,12 +19,15 @@
       --text: #1e293b;
       --blue: #3b82f6;
       --blueBg: #eff6ff;
+
+      /* Panels: gleiche Höhe, Seite bleibt scrollbar */
+      --panelH: 460px;
     }
 
     html, body { height: 100%; }
-    body { background-color: var(--bg); font-family: 'Inter', sans-serif; color: var(--text); overflow: auto; }
+    /* WICHTIG: gesamte Seite scrollbar */
+    body { background-color: var(--bg); font-family: 'Inter', sans-serif; color: var(--text); overflow-y: auto; overflow-x: hidden; }
 
-    /* 13" Kompaktheit */
     header { padding-top: 1.2rem !important; padding-bottom: 1.0rem !important; }
     .card { border-radius: 1.1rem; }
     .card.p-6 { padding: 1.0rem !important; }
@@ -32,10 +35,15 @@
     .space-y-5 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.85rem !important; }
     .py-4 { padding-top: 0.75rem !important; padding-bottom: 0.75rem !important; }
 
-    /* NUR: "Schnittchen" im Header ausblenden (Subtitle bleibt) */
+    /* Nur "Schnittchen" im Header ausblenden – Rest bleibt */
     #hdr-title { display: none; }
 
-    /* Inputs */
+    /* Panels NICHT intern scrollen */
+    .panel { height: var(--panelH); overflow: visible; }
+    .list-card { height: var(--panelH); display:flex; flex-direction: column; overflow: visible; }
+    .list-grow { flex: 1; display:flex; flex-direction: column; min-height: 0; gap: 0.6rem; }
+    #cut-list-text { flex: 1; min-height: 0; }
+
     input, select, textarea {
       font-family: 'JetBrains Mono', monospace;
       text-align: center;
@@ -56,14 +64,15 @@
       height: auto;
       min-height: 0;
       text-align: left;
-      padding: 1.15rem 1.15rem 1.15rem 1.35rem; /* nicht so nah links */
+      /* Stückliste: weiter Richtung Mitte (mehr Innenabstand) */
+      padding: 1.25rem 1.45rem;
       line-height: 1.35;
       white-space: pre;
       resize: none;
     }
     input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
-    /* One-click active style (blau markiert) */
+    /* One-click active style */
     .oneclick-active{
       border-color: var(--blue) !important;
       background: var(--blueBg) !important;
@@ -87,7 +96,6 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.03);
     }
 
-    /* Toggle rows */
     .toggle-row{
       display:flex;
       gap:0.35rem;
@@ -123,7 +131,6 @@
       box-shadow: inset 0 -3px 0 var(--red);
     }
 
-    /* Cleaner Unit Row */
     .unit-row{
       display:flex;
       gap:0.35rem;
@@ -156,7 +163,6 @@
       box-shadow: inset 0 -3px 0 var(--red);
     }
 
-    /* Swap-Button (Länge/Breite) */
     .swap-btn{
       width: 44px;
       height: 44px;
@@ -176,7 +182,6 @@
     .swap-btn:active{ transform: translateY(1px); }
     .swap-icon{ width: 20px; height: 20px; stroke: var(--dark); stroke-width: 2.2; fill: none; }
 
-    /* Action Buttons */
     .action-btn {
       width: 100%;
       padding: 0.78rem 1rem;
@@ -233,17 +238,10 @@
       text-align: center;
     }
 
-    /* Layout */
-    .app { height: 100%; display: flex; flex-direction: column; }
-    .main { flex: 1; overflow: auto; }
+    /* Kein internes Scroll-Layout */
+    .app { min-height: 100%; }
+    .main { overflow: visible; }
     .gridWrap { height: auto; overflow: visible; }
-
-    /* Panels */
-    .panel-500{ height: 500px; min-height: 500px; overflow: auto; }
-
-    .list-card { display:flex; flex-direction: column; height: 500px; min-height: 500px; }
-    .list-grow { flex: 1; display:flex; flex-direction: column; min-height: 0; gap: 0.6rem; }
-    #cut-list-text { flex: 1; min-height: 0; }
   </style>
 </head>
 
@@ -264,24 +262,22 @@
   </header>
 
   <div class="main">
-    <div class="max-w-7xl mx-auto px-4 h-full">
+    <div class="max-w-7xl mx-auto px-4">
       <div class="gridWrap">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start h-full">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-          <!-- LEFT: Inputs -->
-          <div class="lg:col-span-4 card p-6 space-y-5 panel-500">
+          <!-- LEFT: Inputs (endet optisch nach Wandstärke + Material) -->
+          <div class="lg:col-span-4 card p-6 space-y-5 panel">
 
             <div>
               <label id="lbl-unit">Maße</label>
 
-              <!-- Units: mm | cm | inch -->
               <div class="unit-row mb-2">
                 <button onclick="setUnit('mm')" id="u-mm" class="btn-pill active">MM</button>
                 <button onclick="setUnit('cm')" id="u-cm" class="btn-pill">CM</button>
                 <button onclick="setUnit('inch')" id="u-inch" class="btn-pill">INCH</button>
               </div>
 
-              <!-- Toggle: Außenmaß | Innenmaß -->
               <div class="toggle-row" role="group" aria-label="Maß-Referenz">
                 <button type="button" id="t-outside" class="toggle-btn active" onclick="setMode('outside')">Außenmaß</button>
                 <button type="button" id="t-inside" class="toggle-btn" onclick="setMode('inside')">Innenmaß</button>
@@ -293,7 +289,7 @@
               </select>
             </div>
 
-            <!-- Menge + Länge/Breite/Höhe in EINER Linie -->
+            <!-- Menge + Maße -->
             <div class="py-4 border-y border-slate-100">
               <div class="grid grid-cols-12 gap-3 items-end">
                 <div class="col-span-2">
@@ -348,7 +344,6 @@
               </div>
             </div>
 
-            <!-- Material & Wandstärke in EINER Linie -->
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label id="lbl-thick">Wandstärke</label>
@@ -361,7 +356,7 @@
             </div>
           </div>
 
-          <!-- MIDDLE: Stückliste + Copy -->
+          <!-- MIDDLE: Stückliste -->
           <div class="lg:col-span-4 card p-6 list-card">
             <div class="list-grow">
               <h2 class="font-black uppercase text-slate-400 text-[10px] tracking-widest text-center" id="lbl-list">
@@ -377,9 +372,9 @@
             </div>
           </div>
 
-          <!-- RIGHT: 3D -->
+          <!-- RIGHT: 3D (gleiche Höhe wie links/mitte, ohne internes Scrollen) -->
           <div class="lg:col-span-4">
-            <div class="bg-slate-900 rounded-2xl overflow-hidden h-[500px] shadow-xl relative border-b-8" style="border-color: var(--red);">
+            <div class="bg-slate-900 rounded-2xl overflow-hidden shadow-xl relative border-b-8 panel" style="border-color: var(--red);">
               <div id="canvas-container" class="w-full h-full"></div>
             </div>
           </div>
@@ -419,7 +414,7 @@
   let unit = 'mm';
   let lang = 'de';
 
-  let grainAxis = null; // 'x' | 'z'
+  let grainAxis = null;
   let woodTex = null;
   let woodMat = null;
   let edgeMat = null;
@@ -495,7 +490,6 @@
     }
   };
 
-  // --- Units
   const factorToMM = (u) => (u === 'mm' ? 1 : (u === 'cm' ? 10 : 25.4));
 
   function digitsForUnit(u){
@@ -518,7 +512,7 @@
     document.getElementById('l-en').className = l === 'en' ? 'lang-btn active' : 'lang-btn inactive';
 
     const d = dict[lang];
-    document.getElementById('hdr-title').innerText = d.title;   // bleibt im DOM, ist aber per CSS versteckt
+    document.getElementById('hdr-title').innerText = d.title;
     document.getElementById('hdr-sub').innerText = d.sub;
 
     const keys = Object.keys(d);
@@ -567,24 +561,19 @@
   function setMode(mode){
     const sel = document.getElementById('type');
     sel.value = mode;
-
     document.getElementById('t-outside').classList.toggle('active', mode === 'outside');
     document.getElementById('t-inside').classList.toggle('active', mode === 'inside');
-
     calculate();
   }
 
   function setBottom(bt){
     const sel = document.getElementById('bottom-type');
     sel.value = bt;
-
     document.getElementById('t-binside').classList.toggle('active', bt === 'inside');
     document.getElementById('t-bbottom').classList.toggle('active', bt === 'bottom');
-
     calculate();
   }
 
-  // --- One-click select + blue highlight
   function focusSelect(el){
     el.classList.add('oneclick-active');
     el.focus({preventScroll:true});
@@ -595,15 +584,8 @@
 
   function wireSelectAll() {
     document.querySelectorAll('input, textarea').forEach(el => {
-      el.addEventListener('mousedown', (e) => {
-        e.preventDefault();
-        focusSelect(el);
-      });
-      el.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        focusSelect(el);
-      }, {passive:false});
-
+      el.addEventListener('mousedown', (e) => { e.preventDefault(); focusSelect(el); });
+      el.addEventListener('touchstart', (e) => { e.preventDefault(); focusSelect(el); }, {passive:false});
       el.addEventListener('focus', () => el.classList.add('oneclick-active'));
       el.addEventListener('blur', () => el.classList.remove('oneclick-active'));
     });
@@ -853,6 +835,7 @@ ${1 * Q}x ${d.bottom} ${fmt(toUnit(bL))} × ${fmt(toUnit(bW))} ${unit}`;
     setTimeout(() => btn.classList.remove('active'), 450);
   }
 
+  // Tabelle (TSV) – ohne Minus vor Menge (nur Klammern), keine "Felder scrollen"
   function copyTableExcel() {
     const d = dict[lang];
 
@@ -907,18 +890,20 @@ ${1 * Q}x ${d.bottom} ${fmt(toUnit(bL))} × ${fmt(toUnit(bW))} ${unit}`;
     });
   }
 
+  // Projektnummer: Datum + NUR 3 Ziffern (auch 000 möglich)
   function genProjectId() {
     const now = new Date();
-    const pad = (n) => String(n).padStart(2, '0');
+    const pad2 = (n) => String(n).padStart(2, '0');
     const y = now.getFullYear();
-    const m = pad(now.getMonth() + 1);
-    const d = pad(now.getDate());
-    const hh = pad(now.getHours());
-    const mm = pad(now.getMinutes());
-    const rand = Math.floor(Math.random() * 900 + 100);
-    return `PRJ-${y}${m}${d}-${hh}${mm}-${rand}`;
+    const m = pad2(now.getMonth() + 1);
+    const d = pad2(now.getDate());
+    const hh = pad2(now.getHours());
+    const mm = pad2(now.getMinutes());
+    const rand3 = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
+    return `PRJ-${y}${m}${d}-${hh}${mm}-${rand3}`;
   }
 
+  // Mail: "Betreff:"/ "Subject:" entfernen (aber Betreff-Inhalt bleibt als erste Zeile)
   function copyEmail() {
     const projectId = genProjectId();
 
@@ -933,7 +918,7 @@ ${1 * Q}x ${d.bottom} ${fmt(toUnit(bL))} × ${fmt(toUnit(bW))} ${unit}`;
     let body = "";
     if (lang === 'de') {
       body =
-`BETREFF: ${subjectDE}
+`${subjectDE}
 
 Sehr geehrte Damen und Herren,
 
@@ -956,7 +941,7 @@ Mit freundlichen Grüßen
 Ein Kunde`;
     } else {
       body =
-`SUBJECT: ${subjectEN}
+`${subjectEN}
 
 Dear Sir or Madam,
 
@@ -989,7 +974,6 @@ A customer`;
     wireSelectAll();
     init3D();
     setLang('de');
-
     setMode(document.getElementById('type').value || 'outside');
     setBottom(document.getElementById('bottom-type').value || 'inside');
   };
