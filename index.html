@@ -20,13 +20,19 @@
       --blue: #3b82f6;
       --blueBg: #eff6ff;
 
-      /* Panels: gleiche Höhe, Seite bleibt scrollbar */
-      --panelH: 460px;
+      /* wird per JS auf Höhe der linken Spalte gesetzt */
+      --panelH: 420px;
     }
 
     html, body { height: 100%; }
-    /* WICHTIG: gesamte Seite scrollbar */
-    body { background-color: var(--bg); font-family: 'Inter', sans-serif; color: var(--text); overflow-y: auto; overflow-x: hidden; }
+    /* 1) Ganze Seite scrollbar */
+    body {
+      background-color: var(--bg);
+      font-family: 'Inter', sans-serif;
+      color: var(--text);
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
 
     header { padding-top: 1.2rem !important; padding-bottom: 1.0rem !important; }
     .card { border-radius: 1.1rem; }
@@ -38,9 +44,13 @@
     /* Nur "Schnittchen" im Header ausblenden – Rest bleibt */
     #hdr-title { display: none; }
 
-    /* Panels NICHT intern scrollen */
-    .panel { height: var(--panelH); overflow: visible; }
-    .list-card { height: var(--panelH); display:flex; flex-direction: column; overflow: visible; }
+    /* 2) Linke Spalte endet nach Wandstärke/Material (kein künstliches Strecken) */
+    .left-panel { height: auto; overflow: visible; }
+
+    /* Mittlere & rechte Spalte: gleiche Höhe wie links (per --panelH) */
+    .mid-panel { height: var(--panelH); display:flex; flex-direction: column; overflow: visible; }
+    .right-panel { height: var(--panelH); }
+
     .list-grow { flex: 1; display:flex; flex-direction: column; min-height: 0; gap: 0.6rem; }
     #cut-list-text { flex: 1; min-height: 0; }
 
@@ -60,19 +70,20 @@
       user-select: text;
       caret-color: var(--blue);
     }
+
     textarea{
       height: auto;
       min-height: 0;
       text-align: left;
-      /* Stückliste: weiter Richtung Mitte (mehr Innenabstand) */
-      padding: 1.25rem 1.45rem;
+      /* 3) Stückliste: optisch weiter Richtung Mitte (mehr linker Innenabstand) */
+      padding: 1.25rem 1.6rem 1.25rem 2.35rem;
       line-height: 1.35;
       white-space: pre;
       resize: none;
     }
+
     input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
-    /* One-click active style */
     .oneclick-active{
       border-color: var(--blue) !important;
       background: var(--blueBg) !important;
@@ -238,7 +249,6 @@
       text-align: center;
     }
 
-    /* Kein internes Scroll-Layout */
     .app { min-height: 100%; }
     .main { overflow: visible; }
     .gridWrap { height: auto; overflow: visible; }
@@ -267,7 +277,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
           <!-- LEFT: Inputs (endet optisch nach Wandstärke + Material) -->
-          <div class="lg:col-span-4 card p-6 space-y-5 panel">
+          <div id="panel-left" class="lg:col-span-4 card p-6 space-y-5 left-panel">
 
             <div>
               <label id="lbl-unit">Maße</label>
@@ -357,7 +367,7 @@
           </div>
 
           <!-- MIDDLE: Stückliste -->
-          <div class="lg:col-span-4 card p-6 list-card">
+          <div id="panel-mid" class="lg:col-span-4 card p-6 mid-panel">
             <div class="list-grow">
               <h2 class="font-black uppercase text-slate-400 text-[10px] tracking-widest text-center" id="lbl-list">
                 Stückliste (Berechnet)
@@ -372,9 +382,9 @@
             </div>
           </div>
 
-          <!-- RIGHT: 3D (gleiche Höhe wie links/mitte, ohne internes Scrollen) -->
+          <!-- RIGHT: 3D -->
           <div class="lg:col-span-4">
-            <div class="bg-slate-900 rounded-2xl overflow-hidden shadow-xl relative border-b-8 panel" style="border-color: var(--red);">
+            <div id="panel-right" class="bg-slate-900 rounded-2xl overflow-hidden shadow-xl relative border-b-8 right-panel" style="border-color: var(--red);">
               <div id="canvas-container" class="w-full h-full"></div>
             </div>
           </div>
@@ -506,6 +516,25 @@
     return (d === 0) ? s : s.replace(/\.?0+$/, (m) => m === '.' ? '' : m);
   }
 
+  /* 2) Höhe der mittleren/rechten Spalte an linke Spalte koppeln */
+  function syncPanelHeights(){
+    const left = document.getElementById('panel-left');
+    if (!left) return;
+
+    const h = left.offsetHeight;
+    if (h > 0) document.documentElement.style.setProperty('--panelH', h + 'px');
+
+    // 3D-Canvas nach Höhenanpassung sauber nachziehen
+    if (renderer && camera) {
+      const container = document.getElementById('canvas-container');
+      const w = container.clientWidth || 1;
+      const hh = container.clientHeight || 1;
+      camera.aspect = w / hh;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, hh);
+    }
+  }
+
   function setLang(l) {
     lang = l;
     document.getElementById('l-de').className = l === 'de' ? 'lang-btn active' : 'lang-btn inactive';
@@ -530,6 +559,7 @@
     document.getElementById('btn-mail').innerText = d.mail;
 
     calculate();
+    requestAnimationFrame(syncPanelHeights);
   }
 
   function setUnit(u) {
@@ -556,6 +586,7 @@
     document.getElementById('u-' + u).classList.add('active');
 
     calculate();
+    requestAnimationFrame(syncPanelHeights);
   }
 
   function setMode(mode){
@@ -564,6 +595,7 @@
     document.getElementById('t-outside').classList.toggle('active', mode === 'outside');
     document.getElementById('t-inside').classList.toggle('active', mode === 'inside');
     calculate();
+    requestAnimationFrame(syncPanelHeights);
   }
 
   function setBottom(bt){
@@ -572,6 +604,7 @@
     document.getElementById('t-binside').classList.toggle('active', bt === 'inside');
     document.getElementById('t-bbottom').classList.toggle('active', bt === 'bottom');
     calculate();
+    requestAnimationFrame(syncPanelHeights);
   }
 
   function focusSelect(el){
@@ -686,15 +719,13 @@
     ensureWoodMaterial();
 
     window.addEventListener('resize', () => {
-      const w = container.clientWidth;
-      const h = container.clientHeight;
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
+      syncPanelHeights(); // koppelt auch 3D-Resize an neue Panelhöhe
     });
 
     calculate();
     animate();
+
+    requestAnimationFrame(syncPanelHeights);
   }
 
   function animate() {
@@ -790,6 +821,8 @@ ${1 * Q}x ${d.bottom} ${fmt(toUnit(bL))} × ${fmt(toUnit(bW))} ${unit}`;
     const vol_mm3 = Lin * Win * Hin;
     const vol_liters = vol_mm3 / 1_000_000;
     document.getElementById('val-vol').innerText = vol_liters.toFixed(2) + " L";
+
+    requestAnimationFrame(syncPanelHeights);
   }
 
   function update3D({ outerL, outerW, bL, bW, wallH, T, BT, bType }) {
@@ -835,7 +868,7 @@ ${1 * Q}x ${d.bottom} ${fmt(toUnit(bL))} × ${fmt(toUnit(bW))} ${unit}`;
     setTimeout(() => btn.classList.remove('active'), 450);
   }
 
-  // Tabelle (TSV) – ohne Minus vor Menge (nur Klammern), keine "Felder scrollen"
+  /* 4) Tabelle: kein Minus vor Menge */
   function copyTableExcel() {
     const d = dict[lang];
 
@@ -877,9 +910,9 @@ ${1 * Q}x ${d.bottom} ${fmt(toUnit(bL))} × ${fmt(toUnit(bW))} ${unit}`;
     const dimsCol = `${unit} | ${modeLabel}`;
 
     const rows = [
-      [`(${2*Q})`, d.fr,     fmt(toUnit(fL)),   fmt(toUnit(wallH)), dimsCol, wood],
-      [`(${2*Q})`, d.sides,  fmt(toUnit(sL)),   fmt(toUnit(wallH)), dimsCol, wood],
-      [`(${1*Q})`, d.bottom, fmt(toUnit(bL)),   fmt(toUnit(bW)),    dimsCol, wood],
+      [`${2*Q}`, d.fr,     fmt(toUnit(fL)),   fmt(toUnit(wallH)), dimsCol, wood],
+      [`${2*Q}`, d.sides,  fmt(toUnit(sL)),   fmt(toUnit(wallH)), dimsCol, wood],
+      [`${1*Q}`, d.bottom, fmt(toUnit(bL)),   fmt(toUnit(bW)),    dimsCol, wood],
     ];
 
     const tsv = [d.tableHeader, ...rows.map(r => r.join('\t'))].join('\n');
@@ -890,20 +923,17 @@ ${1 * Q}x ${d.bottom} ${fmt(toUnit(bL))} × ${fmt(toUnit(bW))} ${unit}`;
     });
   }
 
-  // Projektnummer: Datum + NUR 3 Ziffern (auch 000 möglich)
+  /* 5) Projektnummer: Datum + NUR 3 Ziffern (ohne hhmm) */
   function genProjectId() {
     const now = new Date();
     const pad2 = (n) => String(n).padStart(2, '0');
     const y = now.getFullYear();
     const m = pad2(now.getMonth() + 1);
     const d = pad2(now.getDate());
-    const hh = pad2(now.getHours());
-    const mm = pad2(now.getMinutes());
     const rand3 = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
-    return `PRJ-${y}${m}${d}-${hh}${mm}-${rand3}`;
+    return `PRJ-${y}${m}${d}-${rand3}`;
   }
 
-  // Mail: "Betreff:"/ "Subject:" entfernen (aber Betreff-Inhalt bleibt als erste Zeile)
   function copyEmail() {
     const projectId = genProjectId();
 
@@ -976,6 +1006,7 @@ A customer`;
     setLang('de');
     setMode(document.getElementById('type').value || 'outside');
     setBottom(document.getElementById('bottom-type').value || 'inside');
+    requestAnimationFrame(syncPanelHeights);
   };
 </script>
 
